@@ -11,23 +11,22 @@ function give_birth(a::Agent,t,p::Dict)
     return new_a
 end
 
-function update_afterbirth_std!(world,idx_offspring,p::Dict) where T
-    # updating competition only the two columns corresponding to agent idx
+function update_afterbirth_std!(world,idx_offspring,t,p::Dict) where T
     α = p["alpha"];K=p["K"];
     x_offspring = get_x(world[idx_offspring])
     for a in skipmissing(world)
         a.d += α(get_x(a),x_offspring)
+        a.b = K(get_x(a),t)
     end
-    # Now updating new agent
+    # rectifying new agent competition experienced
     world[idx_offspring].d = sum(α.(get_x.(skipmissing(world)),Ref(x_offspring))) - α(x_offspring,x_offspring)
-    world[idx_offspring].b = K(x_offspring)
 end
 
-function update_afterdeath_std!(world,x_death,p::Dict) where T
+function update_afterdeath_std!(world,x_death,t,p::Dict) where T
     α = p["alpha"]
-    # updating death rate only the two columns corresponding to agent idx
     for a in skipmissing(world)
         a.d -= α(get_x(a),x_death)
+        a.b = K(get_x(a),t)
     end
 end
 
@@ -55,15 +54,15 @@ function updateWorld_G!(world,p,update_rates!,t)
             # In this case i_event is also the index of the individual to die in the world_alive
             idx_offspring = idx_world[i_event]
             x_death = get_x(world[idx_offspring])
-            update_afterdeath_std!(world,x_death,p)
+            update_afterdeath_std!(world,x_death,t+dt,p)
             world[idx_offspring] = missing
         else
-            # birth event
+            # BIRTH EVENT
             idx_offspring = findfirst(ismissing,world)
             # i_event - N is also the index of the individual to give birth in the world_alive
             mum = world[idx_world[i_event-N]]
             world[idx_offspring] = give_birth(mum,t+dt,p)
-            update_afterbirth_std!(world,idx_offspring,p)
+            update_afterbirth_std!(world,idx_offspring,t+dt,p)
         end
         return dt
     else

@@ -6,7 +6,7 @@ This standard updates takes
     - competition kernels of the form α(x,y) and
     - carrying capacity of the form K(x)
 """
-function  update_rates_std!(world,p::Dict,t::Float64)
+function  update_rates_std!(world,t::Float64,p::Dict)
     α = p["alpha"];K=p["K"];
     traits = get_x.(world)
     # traits = get_xhist.(world)
@@ -23,11 +23,11 @@ function  update_rates_std!(world,p::Dict,t::Float64)
     # Here we can do  it in parallel as well
     for (i,a) in enumerate(world)
         a.d = D[i]
-        a.b = K(traits[i])
+        a.b = K(traits[i],t)
     end
 end
 
-function  update_rates_graph!(world,C,p::Dict,t::Float64)
+function  update_rates_graph!(world,C,t::Float64,p::Dict)
     for e in edges(p["g"])
         # agents on e
         aidx_e = findall(a -> get_x(a,1)==e,world)
@@ -203,7 +203,7 @@ function runWorld_store_G(p,world0)
     # We add a second row for final time step
     worldall = hcat(worldall,Array{Missing}(missing,N,1))
     # we instantiate C as the biggest size it can take
-    update_rates_std!(skipmissing(world0),p,0.)
+    update_rates_std!(skipmissing(world0),0.,p)
     while t<p["tend"]
         if dt < 0
             throw("We obtained negative time step dt = $dt at event $i")
