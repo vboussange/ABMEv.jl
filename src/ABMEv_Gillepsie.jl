@@ -23,7 +23,7 @@ function update_afterbirth_std!(world,idx_offspring,t,p::Dict) where T
 end
 
 function update_afterdeath_std!(world,x_death,t,p::Dict) where T
-    α = p["alpha"]
+    α = p["alpha"];K=p["K"];
     for a in skipmissing(world)
         a.d -= α(get_x(a),x_death)
         a.b = K(get_x(a),t)
